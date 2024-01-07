@@ -73,7 +73,6 @@ int ancil_send_fds(int sock, const int* fds, unsigned n_fds) noexcept
 #else
     typedef struct 
     {
-        struct cmsghdr h;
         int            fd;
     } ANCIL_FD_BUFFER_BLOCK;
 #endif
@@ -93,8 +92,8 @@ int ancil_send_fd(int sock, int fd) noexcept
 #else
     struct
     {
-        struct cmsghdr h;
-        int            f;
+        int            fd;
+	      struct cmsghdr h;
     } buffer;
 #endif
 

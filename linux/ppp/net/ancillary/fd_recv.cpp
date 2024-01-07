@@ -84,9 +84,9 @@ int ancil_recv_fds(int sock, int* fd, unsigned n_fds) noexcept
 #else
     typedef struct 
     {
-        struct cmsghdr h;
         int            fd;
     } ANCIL_FD_BUFFER_BLOCK;
+
 #endif
  
     void* buffer = (void*)alloca(sizeof(ANCIL_FD_BUFFER_BLOCK) + (ANCIL_MAX_N_FDS * sizeof(int)));
@@ -104,8 +104,8 @@ int ancil_recv_fd(int sock, int* fd) noexcept
 #else
     struct
     {
-        struct cmsghdr h;
         int            fd;
+	struct cmsghdr h;
     } buffer;
 #endif
 
