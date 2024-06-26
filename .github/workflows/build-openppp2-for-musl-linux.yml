@@ -25,62 +25,42 @@ jobs:
     env:
       ACTIONS_ALLOW_UNSECURE_COMMANDS: true
     steps:
-    - uses: jirutka/setup-alpine@v1
+    - name: Set up alpine environment
+      uses: jirutka/setup-alpine@v1
       with:
         branch: latest
         arch: aarch64
         packages: alpine-sdk
-
+        
+    - name: run alpine as root
     - run: cat /etc/alpine-release
-      shell: alpine.sh --root {0}
-
-    steps:
+      shell: alpine.sh {0}
+      
     - name: Checkout openppp2
-      run: git clone https://github.com/liulilittle/openppp2.git openppp2 # uses: actions/checkout@v2
+      run: git clone https://github.com/liulilittle/openppp2.git openppp2
+      shell: alpine.sh {0}
 
     - name: Checkout 3rd
       run: git clone https://github.com/liulilittle/openppp2-ubuntu-3rd-environment.git 3rd
+      shell: alpine.sh {0}
 
     - name: Get number of cpus
       run: echo ::set-env name=ncpu::$(nproc)
+      shell: alpine.sh {0}
 
     - name: Set THIRD_PARTY_LIBRARY_DIR environment variables
-      run: |
-        case ${{ matrix.platform }} in
-          linux/amd64)
-            echo ::set-env name=THIRD_PARTY_LIBRARY_DIR::${GITHUB_WORKSPACE}/3rd/amd64
-            ;;
-          linux/aarch64)
-            echo ::set-env name=THIRD_PARTY_LIBRARY_DIR::${GITHUB_WORKSPACE}/3rd/aarch64
-            ;;
-          linux/armv7l)
-            echo ::set-env name=THIRD_PARTY_LIBRARY_DIR::${GITHUB_WORKSPACE}/3rd/armv7l
-            ;;
-          linux/ppc64el)
-            echo ::set-env name=THIRD_PARTY_LIBRARY_DIR::${GITHUB_WORKSPACE}/3rd/ppc64el
-            ;;
-          linux/s390x)
-            echo ::set-env name=THIRD_PARTY_LIBRARY_DIR::${GITHUB_WORKSPACE}/3rd/s390x
-            ;;
-          linux/riscv64)
-            echo ::set-env name=THIRD_PARTY_LIBRARY_DIR::${GITHUB_WORKSPACE}/3rd/riscv64
-            ;;
-          linux/mipsel)
-            echo ::set-env name=THIRD_PARTY_LIBRARY_DIR::${GITHUB_WORKSPACE}/3rd/mipsel
-            ;;
-          *)
-            echo "Unsupported platform: ${{ matrix.platform }}"
-            exit 1
-            ;;
-        esac
+      run: echo ::set-env name=THIRD_PARTY_LIBRARY_DIR::${GITHUB_WORKSPACE}/3rd/aarch64
+      shell: alpine.sh {0}
 
     - name: Print environment variables
       run: echo "ncpu:$ncpu, THIRD_PARTY_LIBRARY_DIR:$THIRD_PARTY_LIBRARY_DIR"
+      shell: alpine.sh {0}
 
     - name: Replace THIRD_PARTY_LIBRARY_DIR in CMakeFiles.txt.
       run: |
         cd openppp2
         sed -i 's/SET(THIRD_PARTY_LIBRARY_DIR \/root\/dev)/SET(THIRD_PARTY_LIBRARY_DIR $ENV{THIRD_PARTY_LIBRARY_DIR})/' CMakeLists.txt
+      shell: alpine.sh {0}
 
     - name: Build openppp2
       run: |
@@ -97,6 +77,7 @@ jobs:
         ARTIFACT_NAME=openppp2-$PLATFORM.zip
         zip -r $ARTIFACT_NAME ppp
         echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
+      shell: alpine.sh {0}
       
     - name: Archive openppp2
       uses: actions/upload-artifact@v2
