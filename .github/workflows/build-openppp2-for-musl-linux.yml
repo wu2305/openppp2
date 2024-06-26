@@ -33,7 +33,7 @@ jobs:
         packages: alpine-sdk
         
     - name: run alpine as root
-    - run: cat /etc/alpine-release
+      run: cat /etc/alpine-release
       shell: alpine.sh {0}
       
     - name: Checkout openppp2
