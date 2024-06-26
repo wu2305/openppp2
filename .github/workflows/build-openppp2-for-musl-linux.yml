@@ -33,6 +33,7 @@ jobs:
           alpine-sdk
           build-base
           cmake
+          linux-headers
         
     - name: run alpine as root
       run: cat /etc/alpine-release
