@@ -20,7 +20,7 @@ jobs:
         os: [ubuntu-latest] # ubuntu-22.04, ubuntu-20.04, ubuntu-18.04
         arch: [amd64] # ${{ runner.arch }}
         platform: 
-          - linux/aarch64
+          - linux/amd64
     runs-on: ubuntu-latest
     env:
       ACTIONS_ALLOW_UNSECURE_COMMANDS: true
@@ -28,7 +28,7 @@ jobs:
     - name: Set up alpine environment
       uses: jirutka/setup-alpine@v1
       with:
-        arch: aarch64
+        arch: amd64
         packages: >
           alpine-sdk
           build-base
