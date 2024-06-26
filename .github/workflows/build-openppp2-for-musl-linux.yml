@@ -29,7 +29,9 @@ jobs:
       uses: jirutka/setup-alpine@v1
       with:
         arch: aarch64
-        packages: alpine-sdk
+        packages: >
+          alpine-sdk
+          build-base
         
     - name: run alpine as root
       run: cat /etc/alpine-release
