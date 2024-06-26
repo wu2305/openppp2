@@ -1,0 +1,105 @@
+# Copyright  : Copyright (C) 2017 ~ 2035 SupersocksR ORG. All rights reserved.
+# Description: PPP PRIVATE NETWORK™ 2 LINUX BUILD SCRIPT CROSS.(X) 1.0.0 VERSION.
+# Author     : Kyou.
+# Date-Time  : 2024/02/14
+
+name: PPP PRIVATE NETWORK™ 2 LINUX BUILD SCRIPT CROSS.(X) 1.0.0 VERSION.
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest] # ubuntu-22.04, ubuntu-20.04, ubuntu-18.04
+        arch: [amd64] # ${{ runner.arch }}
+        platform: 
+          - linux/aarch64
+    runs-on: ubuntu-latest
+    env:
+      ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+    steps:
+    - uses: jirutka/setup-alpine@v1
+      with:
+        branch: latest
+        arch: aarch64
+        packages: alpine-sdk
+
+    - run: cat /etc/alpine-release
+      shell: alpine.sh --root {0}
+
+    steps:
+    - name: Checkout openppp2
+      run: git clone https://github.com/liulilittle/openppp2.git openppp2 # uses: actions/checkout@v2
+
+    - name: Checkout 3rd
+      run: git clone https://github.com/liulilittle/openppp2-ubuntu-3rd-environment.git 3rd
+
+    - name: Get number of cpus
+      run: echo ::set-env name=ncpu::$(nproc)
+
+    - name: Set THIRD_PARTY_LIBRARY_DIR environment variables
+      run: |
+        case ${{ matrix.platform }} in
+          linux/amd64)
+            echo ::set-env name=THIRD_PARTY_LIBRARY_DIR::${GITHUB_WORKSPACE}/3rd/amd64
+            ;;
+          linux/aarch64)
+            echo ::set-env name=THIRD_PARTY_LIBRARY_DIR::${GITHUB_WORKSPACE}/3rd/aarch64
+            ;;
+          linux/armv7l)
+            echo ::set-env name=THIRD_PARTY_LIBRARY_DIR::${GITHUB_WORKSPACE}/3rd/armv7l
+            ;;
+          linux/ppc64el)
+            echo ::set-env name=THIRD_PARTY_LIBRARY_DIR::${GITHUB_WORKSPACE}/3rd/ppc64el
+            ;;
+          linux/s390x)
+            echo ::set-env name=THIRD_PARTY_LIBRARY_DIR::${GITHUB_WORKSPACE}/3rd/s390x
+            ;;
+          linux/riscv64)
+            echo ::set-env name=THIRD_PARTY_LIBRARY_DIR::${GITHUB_WORKSPACE}/3rd/riscv64
+            ;;
+          linux/mipsel)
+            echo ::set-env name=THIRD_PARTY_LIBRARY_DIR::${GITHUB_WORKSPACE}/3rd/mipsel
+            ;;
+          *)
+            echo "Unsupported platform: ${{ matrix.platform }}"
+            exit 1
+            ;;
+        esac
+
+    - name: Print environment variables
+      run: echo "ncpu:$ncpu, THIRD_PARTY_LIBRARY_DIR:$THIRD_PARTY_LIBRARY_DIR"
+
+    - name: Replace THIRD_PARTY_LIBRARY_DIR in CMakeFiles.txt.
+      run: |
+        cd openppp2
+        sed -i 's/SET(THIRD_PARTY_LIBRARY_DIR \/root\/dev)/SET(THIRD_PARTY_LIBRARY_DIR $ENV{THIRD_PARTY_LIBRARY_DIR})/' CMakeLists.txt
+
+    - name: Build openppp2
+      run: |
+        PLATFORM=${{ matrix.platform }}
+        PLATFORM=${PLATFORM//\//-}
+
+        cd openppp2
+        mkdir -p build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+        make -j $ncpu
+        cd ../bin
+
+        ARTIFACT_NAME=openppp2-$PLATFORM.zip
+        zip -r $ARTIFACT_NAME ppp
+        echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
+      
+    - name: Archive openppp2
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.ARTIFACT_NAME }}
+        path: openppp2/bin/${{ env.ARTIFACT_NAME }}
