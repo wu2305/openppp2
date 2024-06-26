@@ -28,7 +28,6 @@ jobs:
     - name: Set up alpine environment
       uses: jirutka/setup-alpine@v1
       with:
-        branch: latest
         arch: aarch64
         packages: alpine-sdk
         
