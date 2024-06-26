@@ -28,7 +28,7 @@ jobs:
     - name: Set up alpine environment
       uses: jirutka/setup-alpine@v1
       with:
-        arch: amd64
+        arch: x86_64
         packages: >
           alpine-sdk
           build-base
